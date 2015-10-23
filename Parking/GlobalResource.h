@@ -13,4 +13,5 @@
 + (instancetype)sharedInstance;
 @property (nonatomic, strong) BMKUserLocation *userLocation;
 @property (nonatomic, assign) BOOL colorPin;
+
 @end

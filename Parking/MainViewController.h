@@ -16,12 +16,13 @@
     UIButton * zoomoutButton;
     UIButton * zoominButton;
     float zoomLevel;
+    double annotationLat;
+    double annotationlong;
 }
 
 @property (nonatomic, strong) BMKMapView* mapView;
 @property (nonatomic, strong) BMKPoiSearch* poisearch;
 @property (nonatomic, strong) BMKLocationService* locService;
 @property (nonatomic, strong) BMKPointAnnotation *annotation;
-
 
 @end

@@ -20,6 +20,7 @@
     [super viewDidLoad];
 
     [GlobalResource sharedInstance].colorPin = NO;
+    
     NSLog(@"lat is %f",[GlobalResource sharedInstance].userLocation.location.coordinate.latitude);
     NSLog(@"long is %f",[GlobalResource sharedInstance].userLocation.location.coordinate.longitude);
 
@@ -40,7 +41,7 @@
 
     // 在地图中添加一个PointAnnotation
     _annotation = [[BMKPointAnnotation alloc]init];
-    _annotation.title = @"用户所在位置";
+    _annotation.title = @"主人所在位置";
     _annotation.subtitle = @"斌彬哥";
     _annotation.coordinate = [GlobalResource sharedInstance].userLocation.location.coordinate;
     [_mapView addAnnotation:_annotation];
@@ -51,6 +52,7 @@
     option.location = [GlobalResource sharedInstance].userLocation.location.coordinate;
     option.keyword = @"停车场";
     BOOL flag = [_poisearch poiSearchNearBy:option];
+    
     if(flag)
     {
         NSLog(@"周边检索发送成功");
@@ -191,7 +193,7 @@
     annotationView.canShowCallout = YES;
     // 设置是否可以拖拽
     annotationView.draggable = NO;
-    UIView *popView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 200, 60)];
+    UIView *popView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 300, 60)];
     //设置弹出气泡图片
     //自定义显示的内容
     UILabel *driverName = [[UILabel alloc]initWithFrame:CGRectMake(2, 20, 170, 20)];
@@ -203,29 +205,44 @@
     [popView addSubview:driverName];
     
     UIButton * navButton=[UIButton buttonWithType:UIButtonTypeRoundedRect];
-    navButton.frame=CGRectMake(160, 15, 30, 30);
+    navButton.frame=CGRectMake(172, 15, 30, 30);
     [navButton setTitle:@"导航" forState:UIControlStateNormal];
-    [navButton addTarget:self action:@selector(zoomoutButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [navButton addTarget:self action:@selector(navAction:) forControlEvents:UIControlEventTouchUpInside];
     [popView addSubview:navButton];
     
     BMKActionPaopaoView *pView = [[BMKActionPaopaoView alloc]initWithCustomView:popView];
-    pView.frame = CGRectMake(0, 0, 200, 60);
+    pView.frame = CGRectMake(0, 0, 300, 60);
     pView.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.9];
     
     ((BMKPinAnnotationView*)annotationView).paopaoView = nil;
     ((BMKPinAnnotationView*)annotationView).paopaoView = pView;
     
-    
-    NSLog(@"lat is %f",annotationView.annotation.coordinate.latitude);
-    NSLog(@"long is %f",annotationView.annotation.coordinate.longitude);
-
     return annotationView;
 }
+
+-(void)navAction:(UIButton *)button{
+    
+    
+    NSLog(@"butt lat is %f",annotationLat);
+    NSLog(@"butt long is %f",annotationlong);
+}
+
+
 - (void)mapView:(BMKMapView *)mapView didSelectAnnotationView:(BMKAnnotationView *)view
 {
+    
     [mapView bringSubviewToFront:view];
     [mapView setNeedsDisplay];
+    
+//    NSLog(@"lat is %f",view.annotation.coordinate.latitude);
+//    NSLog(@"long is %f",view.annotation.coordinate.longitude);
+    annotationLat = view.annotation.coordinate.latitude;
+    annotationlong = view.annotation.coordinate.longitude;
+    _mapView.centerCoordinate = view.annotation.coordinate;
 }
+
+
+
 - (void)mapView:(BMKMapView *)mapView didAddAnnotationViews:(NSArray *)views
 {
     NSLog(@"didAddAnnotationViews");
