@@ -8,6 +8,8 @@
 //最新版本
 #import "MainViewController.h"
 
+#define SystemThemeColor [UIColor colorWithRed:0 green:199.0f/255.0f blue:140.0f/255.0f alpha:1.0f]
+
 @interface MainViewController ()
 
 @end
@@ -16,38 +18,23 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
     [GlobalResource sharedInstance].colorPin = NO;
     NSLog(@"lat is %f",[GlobalResource sharedInstance].userLocation.location.coordinate.latitude);
     NSLog(@"long is %f",[GlobalResource sharedInstance].userLocation.location.coordinate.longitude);
 
     
     _locService = [[BMKLocationService alloc]init];
-    
-    _mapView = [[BMKMapView alloc]initWithFrame:CGRectMake(0, 0, 320, 480)];
-    self.view = _mapView;
-
+    _mapView = [[BMKMapView alloc]initWithFrame:self.view.bounds];
+    [self.view addSubview:_mapView];
     _poisearch = [[BMKPoiSearch alloc]init];
 
     // 设置地图级别
-   [_mapView setZoomLevel:20];
+   [_mapView setZoomLevel:12];
     _mapView.isSelectedAnnotationViewFront = YES;
     _mapView.centerCoordinate = [GlobalResource sharedInstance].userLocation.location.coordinate;
     
-//
-//    [NSTimer scheduledTimerWithTimeInterval:5
-//                                         target:self
-//                                       selector:@selector(updateDataMethod:)
-//                                       userInfo:nil
-//                                        repeats:NO];
-//    
-//    [_locService startUserLocationService];
-//    _mapView.showsUserLocation = NO;//先关闭显示的定位图层
-//    _mapView.userTrackingMode = BMKUserTrackingModeNone;//设置定位的状态
-//    _mapView.showsUserLocation = YES;//显示定位图层
-//
-    
-    
-    float zoomLevel = 0.01;
+    zoomLevel = 0.01;
     BMKCoordinateRegion region = BMKCoordinateRegionMake([GlobalResource sharedInstance].userLocation.location.coordinate,BMKCoordinateSpanMake(zoomLevel, zoomLevel));
     [_mapView setRegion:[_mapView regionThatFits:region] animated:YES];
 
@@ -58,10 +45,9 @@
     _annotation.coordinate = [GlobalResource sharedInstance].userLocation.location.coordinate;
     [_mapView addAnnotation:_annotation];
     
-    
     BMKNearbySearchOption *option = [[BMKNearbySearchOption alloc]init];
     option.pageIndex = curPage;
-    option.pageCapacity = 10;
+    option.pageCapacity = 15;
     option.location = [GlobalResource sharedInstance].userLocation.location.coordinate;
     option.keyword = @"停车场";
     BOOL flag = [_poisearch poiSearchNearBy:option];
@@ -74,6 +60,45 @@
         NSLog(@"周边检索发送失败");
     }
     
+    zoomoutButton=[UIButton buttonWithType:UIButtonTypeRoundedRect];
+    zoomoutButton.frame=CGRectMake(260, 450, 60, 60);
+    [zoomoutButton setTitle:@"放大" forState:UIControlStateNormal];
+    [zoomoutButton setBackgroundColor:SystemThemeColor];
+    [zoomoutButton.layer setBorderWidth:1.0];
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGColorRef colorref = CGColorCreate(colorSpace,(CGFloat[]){ 0, 199/255.0f, 140/255.0f, 1 });
+    [zoomoutButton.layer setBorderColor:colorref];//边框颜色;
+    [zoomoutButton.layer setMasksToBounds:YES];
+    [zoomoutButton.layer setCornerRadius:10.0];
+    zoomoutButton.tag=1;
+    [zoomoutButton addTarget:self action:@selector(zoomoutButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:zoomoutButton];
+    
+    zoominButton=[UIButton buttonWithType:UIButtonTypeRoundedRect];
+    zoominButton.frame=CGRectMake(260, 510, 60, 60);
+    [zoominButton setTitle:@"缩小" forState:UIControlStateNormal];
+    [zoominButton setBackgroundColor:SystemThemeColor];
+    [zoominButton.layer setBorderWidth:1.0];
+    [zoominButton.layer setBorderColor:colorref];//边框颜色;
+    [zoominButton.layer setMasksToBounds:YES];
+    [zoominButton.layer setCornerRadius:10.0];
+    zoominButton.tag=1;
+    [zoominButton addTarget:self action:@selector(zoominButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:zoominButton];
+}
+
+-(void)zoomoutButtonAction:(UIButton *)button{
+
+    zoomLevel = zoomLevel*0.5;
+    BMKCoordinateRegion region = BMKCoordinateRegionMake([GlobalResource sharedInstance].userLocation.location.coordinate,BMKCoordinateSpanMake(zoomLevel, zoomLevel));
+    [_mapView setRegion:[_mapView regionThatFits:region] animated:YES];
+}
+
+-(void)zoominButtonAction:(UIButton *)button{
+
+    zoomLevel = zoomLevel*1.5;
+    BMKCoordinateRegion region = BMKCoordinateRegionMake([GlobalResource sharedInstance].userLocation.location.coordinate,BMKCoordinateSpanMake(zoomLevel, zoomLevel));
+    [_mapView setRegion:[_mapView regionThatFits:region] animated:YES];
 }
 
 -(void)updateDataMethod:(NSTimer*)timer {
@@ -166,7 +191,34 @@
     annotationView.canShowCallout = YES;
     // 设置是否可以拖拽
     annotationView.draggable = NO;
+    UIView *popView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 200, 60)];
+    //设置弹出气泡图片
+    //自定义显示的内容
+    UILabel *driverName = [[UILabel alloc]initWithFrame:CGRectMake(2, 20, 170, 20)];
+    driverName.text = annotationView.annotation.title;
+    driverName.backgroundColor = [UIColor clearColor];
+    driverName.font = [UIFont systemFontOfSize:14];
+    driverName.textColor = [UIColor blackColor];
+    driverName.textAlignment = NSTextAlignmentCenter;
+    [popView addSubview:driverName];
     
+    UIButton * navButton=[UIButton buttonWithType:UIButtonTypeRoundedRect];
+    navButton.frame=CGRectMake(160, 15, 30, 30);
+    [navButton setTitle:@"导航" forState:UIControlStateNormal];
+    [navButton addTarget:self action:@selector(zoomoutButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [popView addSubview:navButton];
+    
+    BMKActionPaopaoView *pView = [[BMKActionPaopaoView alloc]initWithCustomView:popView];
+    pView.frame = CGRectMake(0, 0, 200, 60);
+    pView.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.9];
+    
+    ((BMKPinAnnotationView*)annotationView).paopaoView = nil;
+    ((BMKPinAnnotationView*)annotationView).paopaoView = pView;
+    
+    
+    NSLog(@"lat is %f",annotationView.annotation.coordinate.latitude);
+    NSLog(@"long is %f",annotationView.annotation.coordinate.longitude);
+
     return annotationView;
 }
 - (void)mapView:(BMKMapView *)mapView didSelectAnnotationView:(BMKAnnotationView *)view
@@ -183,7 +235,6 @@
 #pragma mark implement BMKSearchDelegate
 - (void)onGetPoiResult:(BMKPoiSearch *)searcher result:(BMKPoiResult*)result errorCode:(BMKSearchErrorCode)error
 {
-    
     // 清楚屏幕中所有的 poi annotation
     NSArray* array = [NSArray arrayWithArray:_mapView.annotations];
     NSMutableArray *myMutableArray = [array mutableCopy];
@@ -210,6 +261,5 @@
        
     }
 }
-
 
 @end
